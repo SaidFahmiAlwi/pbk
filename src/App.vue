@@ -1,82 +1,181 @@
 <script setup>
-import { ref } from 'vue';
-import HelloWorld from './components/HelloWorld.vue';
+import { ref, computed, watch, onMounted, onUpdated, onUnmounted } from 'vue';
 
-// Reactive variables
-const message = ref('Hello Vue 3!');
-const isVisible = ref(true);
-const inputText = ref('');
-const count = ref(0);
+const items = ref(["buku", "pena", "pensil", "penghapus"]);
+const newItem = ref("");
 
-// Methods
-const increment = () => {
-  count.value++;
+const addItem = () => {
+  if (newItem.value.trim() !== "") {
+    items.value.push(newItem.value.trim());
+    newItem.value = "";
+  }
 };
 
-const toggleVisibility = () => {
-  isVisible.value = !isVisible.value;
-};
+// Harga Barang & Pajak
+const price = ref(48000);
+const tax = ref(3);
+const totalPrice = computed(() => price.value + (price.value * (tax.value / 100)));
+
+const formatRupiah = (value) => 'Rp ' + value.toLocaleString('id-ID');
+
+// Status Baterai
+const batteryLevel = ref(80);
+const status = ref("Normal");
+
+watch(batteryLevel, (newValue, oldValue) => {
+  console.log(`Battery level changed: ${oldValue} -> ${newValue}`);
+  if (newValue >= 80) {
+    status.value = "Baterai Penuh 🟢";
+  } else if (newValue >= 30) {
+    status.value = "Normal";
+  } else {
+    status.value = "Baterai Lemah ⚠️";
+  }
+});
+
+// Lifecycle Hooks
+onMounted(() => {
+  console.log("✅ Komponen berhasil dimuat! (onMounted)");
+});
+
+onUpdated(() => {
+  console.log("🔄 Komponen diperbarui! (onUpdated)");
+});
+
+onUnmounted(() => {
+  console.log("❌ Komponen dihapus dari DOM! (onUnmounted)");
+});
 </script>
 
 <template>
   <div class="container">
-    <!-- Text Interpolation -->
-    <h1>{{ message }}</h1>
+    <ul class="product-list">
+      <li v-for="(item, index) in items" :key="index">
+        {{ index + 1 }}. {{ item }}
+      </li>
+    </ul>
 
-    <!-- Conditional Rendering -->
-    <button @click="toggleVisibility">
-      {{ isVisible ? 'Sembunyikan' : 'Tampilkan' }} Teks
-    </button>
-    <p v-if="isVisible">Teks ini bisa disembunyikan</p>
+    <div class="input-group">
+      <input v-model="newItem" type="text" placeholder="Masukkan nama barang" />
+      <button @click="addItem">Tambah Barang</button>
+    </div>
 
-    <!-- Form Binding -->
-    <input v-model="inputText" placeholder="Ketik sesuatu..." />
-    <p>Isi input: {{ inputText }}</p>
+    <div class="card">
+      <h2>Harga dengan Pajak:</h2>
+      <label>Harga Barang:</label>
+      <input v-model.number="price" type="number" min="0" />
 
-    <!-- Event Listener -->
-    <button @click="increment">Tambah</button>
-    <p>Hitungan: {{ count }}</p>
+      <label>Pajak (%):</label>
+      <input v-model.number="tax" type="number" min="0" />
 
-    <!-- Attribute Binding -->
-    <a :href="'https://vite.dev'" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />    </a>
-    <a :href="'https://vuejs.org/'" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+      <p>Harga Barang: <strong>{{ formatRupiah(price) }}</strong></p>
+      <p>Pajak: <strong>{{ tax }}%</strong></p>
+      <p>Total Harga: <strong>{{ formatRupiah(totalPrice) }}</strong></p>
+    </div>
+
+    <div class="card">
+      <h2>Status Baterai</h2>
+      <p>Masukkan persentase baterai:</p>
+      <input v-model.number="batteryLevel" type="number" min="0" max="100" />
+      <p>Status: <strong>{{ status }}</strong></p>
+    </div>
   </div>
-  
-  <!-- Using HelloWorld component -->
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
 <style scoped>
+/* Container utama */
 .container {
-  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-.logo {
-  width: 50px;
-  height: 50px;
-  margin: 10px;
-  transition: transform 0.3s;
+
+/* Daftar Barang */
+.fruit-list {
+  padding: 0;
+  margin-bottom: 20px;
+  list-style: none;
 }
-.logo:hover {
-  transform: scale(1.1);
+
+.product-list li {
+  background-color: #e0f7fa;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
 }
-button {
-  padding: 0.5rem 1rem;
-  margin: 0.5rem 0;
-  background-color: #42b983;
+
+/* Input Group */
+.input-group {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+}
+
+.input-group button {
+  padding: 10px 15px;
+  background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 0 5px 5px 0;
   cursor: pointer;
 }
-button:hover {
-  background-color: #36936d;
+
+.input-group button:hover {
+  background-color: #0056b3;
 }
-input {
-  padding: 0.5rem;
+
+/* Card styling */
+.card {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  margin-bottom: 15px;
+}
+
+.card input {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+  outline: none;
+}
+
+/* Strong text styling */
+.card p strong {
+  color: #333;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group input,
+  .input-group button {
+    width: 100%;
+    margin: 5px 0;
+  }
 }
 </style>
